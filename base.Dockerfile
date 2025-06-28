@@ -7,3 +7,4 @@ RUN pip install matplotlib
 RUN pip install gdown 
 RUN pip install streamlit 
 RUN pip install importnb
+RUN pip install shapely
