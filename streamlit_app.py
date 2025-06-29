@@ -4,33 +4,31 @@ import numpy as np
 import cv2
 from ultralytics import YOLO
 
-# Set model paths
+
 SHELF_MODEL_PATH = "models/shelv.pt"
 PRODUCT_MODEL_PATH = "models/product.pt"
 
-# Load models
+
 shelf_model = YOLO(SHELF_MODEL_PATH)
 product_model = YOLO(PRODUCT_MODEL_PATH)
 
-# Streamlit UI
+
 st.title("Shelf & Product Detector App")
 
 uploaded_file = st.file_uploader("Upload an image", type=["jpg", "jpeg", "png"])
 
 
 if uploaded_file:
-    from shapely.geometry import Polygon
-
-    # Load image
+    
     image = Image.open(uploaded_file).convert("RGB")
     image_np = np.array(image)
     output_img = image_np.copy()
 
-    # Run models
+    
     shelf_result = shelf_model(image_np)
     product_result = product_model(image_np)
 
-    # Extract data
+    
     shelf_polys = shelf_result[0].obb.xyxyxyxy.cpu().numpy() if shelf_result[0].obb else []
     product_boxes = product_result[0].boxes.xyxy.cpu().numpy() if product_result[0].boxes else []
 
@@ -44,19 +42,19 @@ if uploaded_file:
         shelf_num = i + 1
         polygon = poly.reshape((-1, 1, 2)).astype(np.int32)
 
-        # Get shelf extents
+        
         x_coords = poly[:, 0]
         y_coords = poly[:, 1]
         min_x, max_x = x_coords.min(), x_coords.max()
         min_y, max_y = y_coords.min(), y_coords.max()
         shelf_width = max_x - min_x
 
-        # Draw shelf outline and number
+        
         cv2.polylines(output_img, [polygon], isClosed=True, color=(255, 0, 0), thickness=22)
         cv2.putText(output_img, f"Shelf {shelf_num}", (int(min_x), int(min_y - 10)),
                     cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 0), thickness=28)
 
-        # Track products inside shelf
+        
         shelf_products = []
         total_product_width = 0
 
@@ -67,16 +65,16 @@ if uploaded_file:
                 shelf_products.append(box)
                 product_count += 1
 
-                # Draw product box
+                
                 pt1 = tuple(box[:2].astype(int))
                 pt2 = tuple(box[2:].astype(int))
                 cv2.rectangle(output_img, pt1, pt2, color=(0, 255, 0), thickness=22)
 
-                # Accumulate width
+                
                 box_width = x2 - x1
                 total_product_width += box_width
 
-        # Calculate free space
+        
         free_space = max(shelf_width - total_product_width, 0)
         est_extra_products = int(free_space / avg_product_width) if avg_product_width > 0 else 0
 
@@ -90,10 +88,10 @@ if uploaded_file:
             "Est. extra products": est_extra_products
         })
 
-    # Show final image
-    st.image(output_img, caption="📦 Shelves (Blue), Products (Green), Labels (White)", use_column_width=True)
+    
+    st.image(output_img, caption="📦 Shelves (Blue), Products (Green), Labels (White)", use_container_width=True)
 
-    # Description
+    
     st.markdown("### 🧠 Shelf Capacity Analysis")
     st.write(f"🗄️ **Total Shelves Detected**: `{len(shelf_polys)}`")
     st.write(f"📦 **Total Products Detected**: `{product_count}`")
