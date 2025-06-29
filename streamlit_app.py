@@ -52,7 +52,7 @@ if uploaded_file:
         
         cv2.polylines(output_img, [polygon], isClosed=True, color=(255, 0, 0), thickness=22)
         cv2.putText(output_img, f"Shelf {shelf_num}", (int(min_x), int(min_y - 10)),
-                    cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 0), thickness=28)
+                    cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 0), thickness=21)
 
         
         shelf_products = []
